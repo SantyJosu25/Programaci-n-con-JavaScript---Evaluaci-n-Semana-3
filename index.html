@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evaluación Semana 3 - BookReview App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        input, textarea {
+            display: block;
+            margin-bottom: 10px;
+            padding: 5px;
+            width: 300px;
+        }
+
+        button {
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+
+        ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+
+        ul li {
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Actividad 1: Almacenamiento en localStorage -->
+    <section id="actividad1">
+        <h2>Actividad 1: Guardar Reseña en localStorage</h2>
+        <input type="text" id="titulo" placeholder="Título del libro" />
+        <input type="text" id="autor" placeholder="Autor del libro" />
+        <textarea id="reseña" placeholder="Texto de la reseña"></textarea>
+        <button onclick="guardarReseña()">Guardar Reseña</button>
+    </section>
+
+    <!-- Actividad 2: Consumo de una API externa -->
+    <section id="actividad2">
+        <h2>Actividad 2: Buscar Libro en Google Books</h2>
+        <input type="text" id="tituloBusqueda" placeholder="Título del libro" />
+        <button onclick="buscarLibro()">Buscar Libro</button>
+    </section>
+
+    <!-- Actividad 3: Uso de un framework de JavaScript (React) -->
+    <section id="actividad3">
+        <h2>Actividad 3: Listar y Agregar Reseñas (React)</h2>
+        <div id="root"></div>
+    </section>
+
+    <!-- Incluye React y ReactDOM desde un CDN -->
+    <script src="https://unpkg.com/react@17/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/babel-standalone@6.26.0/babel.min.js" crossorigin></script>
+
+    <script type="text/babel">
+
+        // Actividad 1: Almacenamiento en localStorage
+        function guardarReseña() {
+            const titulo = document.getElementById('titulo').value;
+            const autor = document.getElementById('autor').value;
+            const textoReseña = document.getElementById('reseña').value;
+
+            if (titulo && autor && textoReseña) {
+                const reseña = { autor, textoReseña };
+                localStorage.setItem(titulo, JSON.stringify(reseña));
+                alert('Reseña guardada correctamente');
+                // Limpiar los campos después de guardar
+                document.getElementById('titulo').value = '';
+                document.getElementById('autor').value = '';
+                document.getElementById('reseña').value = '';
+            } else {
+                alert('Por favor, completa todos los campos.');
+            }
+        }
+
+        // Actividad 2: Consumo de una API externa
+        async function buscarLibro() {
+            const titulo = document.getElementById('tituloBusqueda').value;
+
+            if (titulo) {
+                const apiUrl = `https://www.googleapis.com/books/v1/volumes?q=intitle:${encodeURIComponent(titulo)}`;
+                try {
+                    const response = await fetch(apiUrl);
+                    const data = await response.json();
+
+                    if (data.items && data.items.length > 0) {
+                        console.log(data.items[0]);
+                    } else {
+                        console.log("No se encontraron libros con ese título.");
+                    }
+                } catch (error) {
+                    console.error("Error al buscar el libro:", error);
+                }
+
+                // Limpiar el campo después de buscar
+                document.getElementById('tituloBusqueda').value = '';
+            } else {
+                alert('Por favor, ingresa un título para buscar.');
+            }
+        }
+
+        // Actividad 3: Uso de un framework de JavaScript (React)
+        function BookReviewApp() {
+            const [reseñas, setReseñas] = React.useState([]);
+            const [titulo, setTitulo] = React.useState('');
+            const [autor, setAutor] = React.useState('');
+            const [textoReseña, setTextoReseña] = React.useState('');
+
+            // Cargar las reseñas desde localStorage al montar el componente
+            React.useEffect(() => {
+                const storedReseñas = [];
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    const reseña = JSON.parse(localStorage.getItem(key));
+                    storedReseñas.push({ titulo: key, ...reseña });
+                }
+                setReseñas(storedReseñas);
+            }, []);
+
+            // Función para agregar una nueva reseña
+            const agregarReseña = () => {
+                if (titulo && autor && textoReseña) {
+                    const nuevaReseña = { titulo, autor, textoReseña };
+                    localStorage.setItem(titulo, JSON.stringify(nuevaReseña));
+                    setReseñas([...reseñas, nuevaReseña]);
+                    // Limpiar los campos de entrada después de agregar
+                    setTitulo('');
+                    setAutor('');
+                    setTextoReseña('');
+                } else {
+                    alert('Por favor, completa todos los campos.');
+                }
+            };
+
+            return (
+                <div>
+                    <ul>
+                        {reseñas.map((reseña, index) => (
+                            <li key={index}>
+                                <strong>{reseña.titulo}</strong> por {reseña.autor}: {reseña.textoReseña}
+                            </li>
+                        ))}
+                    </ul>
+                    <h3>Agregar Nueva Reseña</h3>
+                    <input
+                        type="text"
+                        placeholder="Título"
+                        value={titulo}
+                        onChange={(e) => setTitulo(e.target.value)}
+                    />
+                    <input
+                        type="text"
+                        placeholder="Autor"
+                        value={autor}
+                        onChange={(e) => setAutor(e.target.value)}
+                    />
+                    <textarea
+                        placeholder="Reseña"
+                        value={textoReseña}
+                        onChange={(e) => setTextoReseña(e.target.value)}
+                    ></textarea>
+                    <button onClick={agregarReseña}>Agregar Reseña</button>
+                </div>
+            );
+        }
+
+        // Renderiza la aplicación en el elemento con id "root"
+        ReactDOM.render(<BookReviewApp />, document.getElementById('root'));
+
+    </script>
+</body>
+</html>
